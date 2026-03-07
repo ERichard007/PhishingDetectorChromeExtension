@@ -1,16 +1,23 @@
 {
   "manifest_version": 3,
-  "name": "Email Scraper",
+  "name": "Gmail Phishing Detector",
   "version": "1.0",
+  "version_name": "1.0 Beta",
+  "description": "A Chrome extension to detect phishing emails in Gmail.",
+  "icons": {
+    "16": "assets/images/logo.png",
+    "32": "assets/images/logo.png",
+    "48": "assets/images/logo.png",
+    "128": "assets/images/logo.png"
+  },
   "permissions": ["activeTab", "scripting", "downloads"],
   "content_scripts": [
     {
       "matches": ["https://mail.google.com/*"],
-      "js": ["content.js"]
+      "js": ["static/js/scraper.js"]
     }
   ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Scrape Email"
+  "background": {
+    "service_worker": "static/js/downloader.js"
   }
 }
