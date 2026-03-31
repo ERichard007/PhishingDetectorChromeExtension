@@ -1,22 +1,31 @@
 class Scraper {
     constructor() {
-        this.email_subject = "";
         this.observer = null;
-        this.current_subject = "";
-
         this.downloaded_emails = new Set();
 
         this.#email_viewer();
     }
 
     /**
+     * Private method to return a table containing emails to tie click events to.
+     * @returns {HTMLTableElement|null} The email table element.
+     */
+    #get_email_table() {
+        const table_element = document.querySelector('table.F.cf.zt'); // gmail email table element
+        if (table_element) {
+            return table_element;
+        }
+        return null;
+    }
+
+    /**
     * Private method to extract email subject.
-    * @returns {string} The sanitized email subject for use as a filename.
+    * @returns {string|null} The sanitized email subject for use as a filename.
     */
     #get_email_subject() {
-        const subject_element = document.querySelector('h2.hP');
+        const subject_element = document.querySelector('h2.hP'); // gmail subject element
         if (subject_element) {
-            return subject_element.innerText.replace(/[^a-z0-9 ]/gi, '_');
+            return subject_element.innerText.replace(/[^a-z0-9]/gi, '_'); // sanitize subject
         }
         return null;
     }
@@ -33,33 +42,38 @@ class Scraper {
     }
 
     /**
-     * Private method fired when this.observer
+     * Private method fired when an email is clicked. It checks if the email content is loaded and then initiates the scraping process.
      */
-    #on_dom_changed() {
-        console.log("DOM changed, checking for email content...");
+    #on_email_click() {
+        console.log("Email clicked, checking for content...");
 
         const subject = this.#get_email_subject();
         const bodyEl = document.querySelector('.a3s');
 
-        if (!bodyEl || !subject) return;
-
-        bodyEl.setAttribute("tabindex", bodyEl.getAttribute("tabindex") || "0");
-
-        if (subject !== this.current_subject) {
-            this.current_subject = subject;
-            console.log("new email SUBJECT! ", this.current_subject);
-            bodyEl.dataset.scraped = "false";
+        if (!bodyEl || !subject) { // email is not open or content not loaded yet
+            console.log("Timeout: No body or subject found!");
+            setTimeout(() => this.#on_email_click(), 100); // retry after delay
+            return;
         }
 
-        if (bodyEl.dataset.scraped === "false") {
-            bodyEl.dataset.scraped = "true";
+        console.log("Downloading email..."); 
+        this.scrape();
+    }
 
-            console.log("Email content found, setting up download trigger...");
+    /**
+     * Private method fired when this.observer detects changes in the email DOM structure.
+     */
+    #on_dom_changed() {
+        console.log("DOM changed, checking for email content...");
 
-            const download = () => { console.log("Downloading email..."); this.scrape(); };
+        const email_table = this.#get_email_table();
 
-            bodyEl.addEventListener('focus', download, { once: true });
-            bodyEl.addEventListener('click', download, { once: true });
+        try {
+            console.log("Email table found, setting up click listener...");
+            email_table.removeEventListener('click', () => { this.#on_email_click() }); // prevent multiple listeners
+            email_table.addEventListener('click', () => { this.#on_email_click() });
+        } catch (error) {
+            console.error("Error with on_dom_changed email_table ---> ", error);
         }
     }
 
@@ -67,17 +81,18 @@ class Scraper {
      * Private method that creates an observer to watch for changes in email DOM structure.
      */
     #email_viewer() {
-        const target = document.querySelector('div[role="main"]');
+        const target = document.querySelector('div[role="main"]'); // Gets container where emails stored
 
-        if (!target) {
-            setTimeout(() => this.#email_viewer(), 1000);
+        if (!target) { // timeout if target not found, likely because Gmail is still loading
+            console.log("Timeout, no target")
+            setTimeout(() => this.#email_viewer(), 2000);
             return;
         }
 
-        this.observer = new MutationObserver(() => this.#on_dom_changed());
+        this.observer = new MutationObserver(() => this.#on_dom_changed()); // Create observer to watch for changes in email DOM structure
         this.observer.observe(target, { childList: true, subtree: true });
 
-        this.#on_dom_changed();
+        this.#on_dom_changed(); // Initial check in case email content already loaded when observer starts
     }
 
     /**
@@ -85,19 +100,34 @@ class Scraper {
      */
     scrape() {
 
-        if (this.downloaded_emails.has(this.current_subject)) {
+        const subject = this.#get_email_subject();
+
+        if (this.downloaded_emails.has(subject)) {
             console.log("Email already downloaded, skipping...");
             return;
         }
 
-        this.downloaded_emails.add(this.current_subject);
+        this.downloaded_emails.add(subject);
 
-        console.log("Preparing to download email with subject:", this.current_subject);
-        
-        chrome.runtime.sendMessage({type: "download_email", filename: `${this.#get_email_subject()}.txt`, content: this.#get_email_content()}, (response) => {
-            console.log("Succesfully downloaded email", response);
+        console.log("Preparing to download email with subject:", subject);
+
+        chrome.runtime.sendMessage({ message: "virus_total_scan" }, (response) => {
+            if (response) {
+                console.log("Response from background script:", response.message);
+            }else{
+                console.error("No response from background script.");
+            }
         });
     }
 }
 
 let scraper = new Scraper();
+
+/*
+TOPOLOGY: 
+new Scraper() --> #email_viewer() --> #on_dom_changed() -->
+#get_email_table() --> #on_dom_changed() --> #on_email_click() --> 
+#get_email_subject() --> #on_email_click() --> scrape() --> 
+#get_email_content() & #get_email_subject() --> scrape() --> 
+downloader.js download listener
+*/
