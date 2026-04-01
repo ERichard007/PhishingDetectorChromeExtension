@@ -96,6 +96,18 @@ class Scraper {
     }
 
     /**
+     * Private method to extract all links from the email body. It looks for anchor tags within the email content and returns an array of their href attributes.
+     * @return {string[]} An array of links extracted from the email body.
+     */
+    #get_links_from_email() {
+        const body_el = document.querySelector('.a3s');
+        if (!body_el) return [];
+
+        const links = body_el.querySelectorAll('a');
+        return Array.from(links).map(link => link.href);
+    }
+
+    /**
      * Public method to initiate the scraping process. It sends a message to the background script to download the email content as a text file.
      */
     scrape() {
@@ -111,7 +123,10 @@ class Scraper {
 
         console.log("Preparing to download email with subject:", subject);
 
-        chrome.runtime.sendMessage({ message: "virus_total_scan" }, (response) => {
+        const links = this.#get_links_from_email();
+        console.log("Extracted links from email:", links);
+
+        chrome.runtime.sendMessage({ message: "virus_total_scan", links: links }, (response) => {
             if (response) {
                 console.log("Response from background script:", response.message);
             }else{
