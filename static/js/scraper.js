@@ -2,8 +2,7 @@ class Scraper {
     constructor() {
         this.observer = null;
         this.downloaded_emails = new Set();
-
-        this.#email_viewer();
+        this.email_click_listener = this.#on_email_click.bind(this); 
     }
 
     /**
@@ -70,29 +69,11 @@ class Scraper {
 
         try {
             console.log("Email table found, setting up click listener...");
-            email_table.removeEventListener('click', () => { this.#on_email_click() }); // prevent multiple listeners
-            email_table.addEventListener('click', () => { this.#on_email_click() });
+            email_table.removeEventListener('click', this.email_click_listener); // prevent multiple listeners
+            email_table.addEventListener('click', this.email_click_listener);
         } catch (error) {
             console.error("Error with on_dom_changed email_table ---> ", error);
         }
-    }
-
-    /**
-     * Private method that creates an observer to watch for changes in email DOM structure.
-     */
-    #email_viewer() {
-        const target = document.querySelector('div[role="main"]'); // Gets container where emails stored
-
-        if (!target) { // timeout if target not found, likely because Gmail is still loading
-            console.log("Timeout, no target")
-            setTimeout(() => this.#email_viewer(), 2000);
-            return;
-        }
-
-        this.observer = new MutationObserver(() => this.#on_dom_changed()); // Create observer to watch for changes in email DOM structure
-        this.observer.observe(target, { childList: true, subtree: true });
-
-        this.#on_dom_changed(); // Initial check in case email content already loaded when observer starts
     }
 
     /**
@@ -108,13 +89,42 @@ class Scraper {
     }
 
     /**
+     * Public method that creates an observer to watch for changes in email DOM structure. (enables auto scanning)
+     */
+    email_viewer(enable = true) {
+
+        if (enable) {
+            const target = document.querySelector('div[role="main"]'); // Gets container where emails stored
+
+            if (!target) { // timeout if target not found, likely because Gmail is still loading
+                console.log("Timeout, no target")
+                setTimeout(() => this.email_viewer(), 2000);
+                return;
+            }
+
+            this.observer = new MutationObserver(() => this.#on_dom_changed()); // Create observer to watch for changes in email DOM structure
+            this.observer.observe(target, { childList: true, subtree: true });
+
+            this.#on_dom_changed(); // Initial check in case email content already loaded when observer starts
+        }else{
+            const email_table = this.#get_email_table();
+            
+            this.observer.disconnect();
+            email_table.removeEventListener('click', this.email_click_listener);
+        }
+    }
+
+    /**
      * Public method to initiate the scraping process. It sends a message to the background script to download the email content as a text file.
      */
     scrape() {
 
         const subject = this.#get_email_subject();
 
-        if (this.downloaded_emails.has(subject)) {
+        if (!subject) {
+            console.error("No subject found, cannot scrape email.");
+            return;
+        }else if (this.downloaded_emails.has(subject)) {
             console.log("Email already downloaded, skipping...");
             return;
         }
@@ -136,7 +146,20 @@ class Scraper {
     }
 }
 
-let scraper = new Scraper();
+const scraper = new Scraper();
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.message === "scan_email") {
+        console.log("Received scan_email message, initializing Scraper...");    
+        scraper.scrape();
+    } else if (request.message === "enable_auto_scan") {
+        console.log("Received enable_auto_scan message, initializing Scraper...");
+        scraper.email_viewer();
+    } else if (request.message === "disable_auto_scan") {
+        console.log("Received disable_auto_scan message, disconnecting Scraper observer...");
+        scraper.email_viewer(false);
+    }
+});
 
 /*
 TOPOLOGY: 
