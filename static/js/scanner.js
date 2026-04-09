@@ -1,37 +1,52 @@
 class Scanner {
     constructor() {}
 
-    /**
-     * Helper method to apply heuristics to given links and keep only most suspicious for scanning.
-     * @param {string[]} links - An array of links extracted from the email body.
-     * @return {string[]} An array of links that are deemed most suspicious based on heuristics.
-     */
-    #url_links_heuristic(links) {
-        
-    }
-
     /** 
     * Public method to perform a virus total scan
     * @param {string[]} links - An array of links extracted from the email body to be scanned.
     */
     virus_total_scan(links) {
         console.log("Given Links: ", links);
-        
-        new_list = this.#url_links_heuristic(links);
+    }
+
+    /**
+     * Public method to perform a general scan of the email content.
+     * @param {string[]} links - An array of links extracted from the email body to be scanned.
+     * @param {string} text_content - The text content of the email to be scanned.
+     */
+    general_scan(links, text_content) {
+        console.log("Given Links: ", links);
+
+        fetch('http://localhost:8080/scan', {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "chrome-extension://ljcakhhgcailjgbfdejngbplmbidelfh"
+            },
+            body: JSON.stringify({ links: links, text: text_content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Scan Results: ", data);
+        })
+        .catch(error => {
+            console.error("Error occurred during general scan fetch: ", error);
+        });
     }
 
 }
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.message === "virus_total_scan") {
-        console.log("Received virus_total_scan message, scanning email with VirusTotal..."); 
+    if (request.message === "general_scan") {
+        console.log("Received general_scan message, scanning email..."); 
 
         const links = request.links;
+        const text_content = request.text;
         const scanner = new Scanner();
 
-        //scanner.virus_total_scan(links);
+        scanner.general_scan(links, text_content);
 
-        sendResponse({ message: "virus total scan started" }); // Send response back to background script to indicate scan has started
+        sendResponse({ message: "general scan started" }); // Send response back to background script to indicate scan has started
     }
 });

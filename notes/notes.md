@@ -6,9 +6,10 @@
 * got it downloading... uhoh
 * Version 1.0.2 --- working on getting thing to download files correctly
 
+* Version 1.1.0 --- (IN PROGRESS) Should be able to auto scan and also scan emails in gmail. The Scan itself should be able to give you a general statement on how likely it is phishing or not and from what exactly it drew that conclusion.
+
 # TO-DO
 
-* Alright so problem with toggle resetting to false when DOM changes or something?
 * Also it seems the way we are fixing the header and taking out key phrases is not good enough to make it unique so sometimes it thinks we already downloaded it...
 
 # NOTES ABOUT SCAN

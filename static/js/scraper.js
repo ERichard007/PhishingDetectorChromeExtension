@@ -89,6 +89,17 @@ class Scraper {
     }
 
     /**
+     * Private method to extract text content from the email body.
+     * @returns {string}
+     */
+    #get_text_from_email() {
+        const body_el = document.querySelector('.a3s');
+        if (!body_el) return "";
+
+        return body_el.innerText;
+    }
+
+    /**
      * Public method that creates an observer to watch for changes in email DOM structure. (enables auto scanning)
      */
     email_viewer(enable = true) {
@@ -134,9 +145,12 @@ class Scraper {
         console.log("Preparing to download email with subject:", subject);
 
         const links = this.#get_links_from_email();
-        console.log("Extracted links from email:", links);
+        //console.log("Extracted links from email:", links);
 
-        chrome.runtime.sendMessage({ message: "virus_total_scan", links: links }, (response) => {
+        const text_content = this.#get_text_from_email();
+        //console.log("Extracted text content from email:", text_content);
+
+        chrome.runtime.sendMessage({ message: "general_scan", links: links, text: text_content }, (response) => {
             if (response) {
                 console.log("Response from background script:", response.message);
             }else{
