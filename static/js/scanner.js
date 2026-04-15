@@ -15,7 +15,7 @@ class Scanner {
      * @param {string} text_content - The text content of the email to be scanned.
      */
     general_scan(links, text_content) {
-        console.log("Given Links: ", links);
+        //console.log("Given Links: ", links);
 
         fetch('http://localhost:8080/scan', {
             method: 'POST',

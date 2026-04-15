@@ -1,7 +1,3 @@
-
-
-console.log("Content script loaded, setting up event listeners...");    
-
 const scanBtn = document.getElementById('scan_btn');
 const autoScanToggle = document.getElementById('auto_scanning_toggle');
 

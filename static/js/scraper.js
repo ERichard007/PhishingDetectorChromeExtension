@@ -160,8 +160,6 @@ class Scraper {
     }
 }
 
-const scraper = new Scraper();
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.message === "scan_email") {
         console.log("Received scan_email message, initializing Scraper...");    
@@ -175,11 +173,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-/*
-TOPOLOGY: 
-new Scraper() --> #email_viewer() --> #on_dom_changed() -->
-#get_email_table() --> #on_dom_changed() --> #on_email_click() --> 
-#get_email_subject() --> #on_email_click() --> scrape() --> 
-#get_email_content() & #get_email_subject() --> scrape() --> 
-downloader.js download listener
-*/
+const scraper = new Scraper();
+
+chrome.storage.local.get(['autoScanEnabled'], (data) => {
+    if (data.autoScanEnabled) {
+        console.log("Received enable_auto_scan message, initializing Scraper...");
+        scraper.email_viewer();
+    }
+});
