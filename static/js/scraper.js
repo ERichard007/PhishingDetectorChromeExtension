@@ -24,7 +24,7 @@ class Scraper {
     #get_email_subject() {
         const subject_element = document.querySelector('h2.hP'); // gmail subject element
         if (subject_element) {
-            return subject_element.innerText.replace(/[^a-z0-9]/gi, '_'); // sanitize subject
+            return subject_element.innerText;
         }
         return null;
     }
@@ -147,10 +147,10 @@ class Scraper {
         const links = this.#get_links_from_email();
         //console.log("Extracted links from email:", links);
 
-        const text_content = this.#get_text_from_email();
+        const text = this.#get_text_from_email();
         //console.log("Extracted text content from email:", text_content);
 
-        chrome.runtime.sendMessage({ message: "general_scan", links: links, text: text_content }, (response) => {
+        chrome.runtime.sendMessage({ message: "general_scan", links: links, text: text, subject: subject }, (response) => {
             if (response) {
                 console.log("Response from background script:", response.message);
             }else{

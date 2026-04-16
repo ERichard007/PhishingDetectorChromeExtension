@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Gmail Phishing Detector",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A Chrome extension to detect phishing emails in Gmail.",
   "icons": {
     "16": "assets/images/logo.png",
