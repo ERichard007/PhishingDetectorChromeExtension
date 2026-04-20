@@ -20,9 +20,9 @@ def scan():
     #print("Received text content: ", text_content)
 
     trainer = st.scikit_trainer()
-    prediction = trainer.predict(subject, text_content)
+    #prediction = trainer.predict(subject, text_content)
 
-    return {"message": "Scan completed successfully!", "prediction": prediction}
+    #return {"message": "Scan completed successfully!", "prediction": prediction}
 
 
 app.run(port=8080,debug=True)

@@ -17,3 +17,8 @@
 # TOPOLOGY GRAPH
 
 Will add this later when actually got stuff flowing
+
+# TECH STACK
+
+* Frontend -- JS + CSS
+* Backend -- Python + Flask + Scikit-learn

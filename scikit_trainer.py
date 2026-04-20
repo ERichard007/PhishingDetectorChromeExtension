@@ -17,6 +17,9 @@ class scikit_trainer:
     """
     def __init__(self):
 
+        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.training_dir = os.path.normpath(os.path.join(self.base_dir, "assets", "training_sets", "SevenPhishingEmails"))
+
         if os.path.exists('scikit_vectorizer.pkl') and os.path.exists('scikit_model.pkl'):
             self.vectorizer = jl.load('scikit_vectorizer.pkl')
             self.classifier = jl.load('scikit_model.pkl')
@@ -24,24 +27,41 @@ class scikit_trainer:
             self.vectorizer = TfidfVectorizer()
             self.classifier = MultinomialNB() 
 
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            ling_path = os.path.normpath(os.path.join(base_dir, "assets", "training_sets", "SevenPhishingEmails", "Ling.csv"))
+            #print("BASE DIR:", base_dir)
+            #print("FINAL PATH:", ling_path)
+            #print("EXISTS?:", os.path.exists(ling_path))
 
-            print("BASE DIR:", base_dir)
-            print("FINAL PATH:", ling_path)
-            print("EXISTS?:", os.path.exists(ling_path))
+            self._clean_dataset()
+            #self._train()
 
-            self._train(ling_path)
+    def _clean_dataset(self) -> None:
+        """
+        Private method to clean training sets prior to training the model
+        """
 
-    def _train(self, csv_file : str) -> None:
+        dataframes = []
+
+        for file in os.listdir(self.training_dir):
+            print(file)
+            if file.endswith('.csv'):
+                print(f"{file} ENDS WITH CSV!")
+                file_path = os.path.join(self.training_dir, file)
+                df = pd.read_csv(file_path)
+                dataframes.append(df)
+
+        combined_df = pd.concat(dataframes,ignore_index=True)
+        combined_df.drop_duplicates(inplace=True)
+        
+        cleaned_file_path = os.path.join(self.base_dir, "assets", "cleaned_data", "scikit_cleaned.csv")
+        combined_df.to_csv(cleaned_file_path, index=False)
+
+        #add a column with name of original file
+
+        print(f"Data has been cleaned to {cleaned_file_path} --> \n {combined_df.info()}")
+
+    def _train(self) -> None:
         """
         Private method that trains the model using the provided CSV file.
-        Args:
-            csv_file (str): Path to the CSV file containing the training data.
-            The CSV file should have the following columns:
-                - 'subject': The subject of the email.
-                - 'body': The body content of the email.
-                - 'label': The label indicating whether the email is phishing (1) or not (0).
         """
 
         df = pd.read_csv(csv_file)
