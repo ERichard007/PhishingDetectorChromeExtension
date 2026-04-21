@@ -46,10 +46,13 @@ class scikit_trainer:
             if file.endswith('.csv'):
                 print(f"{file} ENDS WITH CSV!")
                 file_path = os.path.join(self.training_dir, file)
+
                 df = pd.read_csv(file_path)
+
                 dataframes.append(df)
 
         combined_df = pd.concat(dataframes,ignore_index=True)
+
         combined_df.drop_duplicates(inplace=True)
         
         cleaned_file_path = os.path.join(self.base_dir, "assets", "cleaned_data", "scikit_cleaned.csv")
@@ -57,7 +60,7 @@ class scikit_trainer:
 
         #add a column with name of original file
 
-        print(f"Data has been cleaned to {cleaned_file_path} --> \n {combined_df.info()}")
+        print(f"Data has been cleaned to {cleaned_file_path} \n DATA --> \n {combined_df.info()} \n MISSING --> \n {combined_df.isnull().sum()}")
 
     def _train(self) -> None:
         """

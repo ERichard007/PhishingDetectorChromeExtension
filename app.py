@@ -1,11 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, request
 from flask_cors import CORS
 
 import scikit_trainer as st
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origin="*")
 
 @app.route('/scan', methods=['POST'])
 def scan():
@@ -22,7 +22,7 @@ def scan():
     trainer = st.scikit_trainer()
     #prediction = trainer.predict(subject, text_content)
 
-    #return {"message": "Scan completed successfully!", "prediction": prediction}
+    return {"message": "Scan completed successfully!", "prediction": "replace with actual prediction"}
 
 
 app.run(port=8080,debug=True)
