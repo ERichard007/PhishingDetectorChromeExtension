@@ -1,9 +1,13 @@
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.feature_extraction.text import TfidfVectorizer
 import joblib as jl
 import pandas as pd
-
+import re
 import os
+
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+
 
 # Dataset used for training the model:
 # Champa, Arifa Islam; Rabbi, Md Fazle (2024). Seven Phishing Email Datasets. 
@@ -25,14 +29,14 @@ class scikit_trainer:
             self.classifier = jl.load('scikit_model.pkl')
         else:
             self.vectorizer = TfidfVectorizer()
-            self.classifier = MultinomialNB() 
+            self.classifier = RandomForestClassifier(n_estimators=10, random_state=42)
 
             #print("BASE DIR:", base_dir)
             #print("FINAL PATH:", ling_path)
             #print("EXISTS?:", os.path.exists(ling_path))
 
             self._clean_dataset()
-            #self._train()
+            self._train()
 
     def _clean_dataset(self) -> None:
         """
@@ -42,18 +46,18 @@ class scikit_trainer:
         dataframes = []
 
         for file in os.listdir(self.training_dir):
-            print(file)
+            #print(file)
             if file.endswith('.csv'):
-                print(f"{file} ENDS WITH CSV!")
+                #print(f"{file} ENDS WITH CSV!")
                 file_path = os.path.join(self.training_dir, file)
 
-                df = pd.read_csv(file_path)
+                df = pd.read_csv(file_path, on_bad_lines='skip')
 
                 dataframes.append(df)
 
         combined_df = pd.concat(dataframes,ignore_index=True)
-
         combined_df.drop_duplicates(inplace=True)
+        combined_df = combined_df.fillna('')
         
         cleaned_file_path = os.path.join(self.base_dir, "assets", "cleaned_data", "scikit_cleaned.csv")
         combined_df.to_csv(cleaned_file_path, index=False)
@@ -67,13 +71,22 @@ class scikit_trainer:
         Private method that trains the model using the provided CSV file.
         """
 
-        df = pd.read_csv(csv_file)
+        df = pd.read_csv(os.path.join(self.base_dir, "assets", "cleaned_data", "scikit_cleaned.csv"))
 
-        texts = (df['subject'].fillna('') + ' ' + df['body'].fillna(''))
-        labels = df['label']
+        texts = (df['sender'].fillna('') + ' ' + df['receiver'].fillna('') + ' ' + df['date'].fillna('') + ' ' + df['subject'].fillna('') + ' ' + df['body'].fillna(''))
 
         X = self.vectorizer.fit_transform(texts)
-        self.classifier.fit(X, labels)
+        y = df['label']
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42) 
+
+        self.classifier.fit(X_train, y_train)
+
+        y_pred = self.classifier.predict(X_test)
+
+        print(confusion_matrix(y_test, y_pred))
+        print(classification_report(y_test, y_pred))
+        print("Accuracy:", accuracy_score(y_test, y_pred))
 
         jl.dump(self.classifier, 'scikit_model.pkl')
         jl.dump(self.vectorizer, 'scikit_vectorizer.pkl')
@@ -95,40 +108,29 @@ class scikit_trainer:
         X = self.vectorizer.transform([text])
 
         prediction = self.classifier.predict(X)[0]
-        print("Prediction:", prediction)
-        pred_prob = self.classifier.predict_proba(X)[0]
-        print("Prediction probabilities:", pred_prob)
+        probs = self.classifier.predict_proba(X)[0]
 
         feature_names = self.vectorizer.get_feature_names_out()
-        print("Feature names:", feature_names)
 
-        tdidf_values = X.toarray()[0]
-        print("TF-IDF values:", tdidf_values)
+        importances = self.classifier.feature_importances_
 
-        phishing_weights = self.classifier.feature_log_prob_[1]
-        print("Phishing weights:", phishing_weights)
-
-        contributions = tdidf_values * phishing_weights
-        print("Contributions:", contributions)
-
-        top_indices = contributions.argsort()[::-1][:10]
-        print ("Top contributing feature indices:", top_indices)
+        top_indices = importances.argsort()[::-1][:10]
 
         explanation = [
             {
                 "word": feature_names[i],
-                "contribution": float(contributions[i])
+                "importance": float(importances[i])
             }
-            for i in top_indices if contributions[i] > 0
+            for i in top_indices
         ]
-        print("Explanation:", explanation)
-        
+
         print("scikit_trainer: Prediction made successfully!")
 
         return {
-            "prediction": int(prediction), 
-            "probability": float(pred_prob[1]), 
+            "prediction": int(prediction),
+            "probability_phishing": float(probs[1]),
+            "probability_safe": float(probs[0]),
             "explanation": explanation
-            }
+        }
 
 
