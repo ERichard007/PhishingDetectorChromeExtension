@@ -1,13 +1,11 @@
 import joblib as jl
 import pandas as pd
-import re
 import os
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
-
 
 # Dataset used for training the model:
 # Champa, Arifa Islam; Rabbi, Md Fazle (2024). Seven Phishing Email Datasets. 
@@ -29,7 +27,7 @@ class scikit_trainer:
             self.classifier = jl.load('scikit_model.pkl')
         else:
             self.vectorizer = TfidfVectorizer()
-            self.classifier = RandomForestClassifier(n_estimators=10, random_state=42)
+            self.classifier = RandomForestClassifier(n_estimators=100, random_state=42)
 
             #print("BASE DIR:", base_dir)
             #print("FINAL PATH:", ling_path)
@@ -110,27 +108,12 @@ class scikit_trainer:
         prediction = self.classifier.predict(X)[0]
         probs = self.classifier.predict_proba(X)[0]
 
-        feature_names = self.vectorizer.get_feature_names_out()
-
-        importances = self.classifier.feature_importances_
-
-        top_indices = importances.argsort()[::-1][:10]
-
-        explanation = [
-            {
-                "word": feature_names[i],
-                "importance": float(importances[i])
-            }
-            for i in top_indices
-        ]
-
         print("scikit_trainer: Prediction made successfully!")
 
         return {
             "prediction": int(prediction),
             "probability_phishing": float(probs[1]),
             "probability_safe": float(probs[0]),
-            "explanation": explanation
         }
 
 

@@ -1,2 +1,4 @@
 assets/training_sets
 assets/cleaned_data
+scikit_model.pkl
+scikit_vectorizer.pkl
