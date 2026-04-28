@@ -22,3 +22,6 @@ Will add this later when actually got stuff flowing
 
 * Frontend -- JS + CSS
 * Backend -- Python + Flask + Scikit-learn
+
+# Research Notes
+

@@ -1,7 +1,5 @@
 from flask import Flask, request
 from flask_cors import CORS
-import requests
-
 import scikit_trainer as st
 
 
