@@ -1,7 +1,7 @@
 assets/training_sets
-assets/cleaned_data
-assets/models
-assets/vectorizers
-assets/metadata
+assets/cleaned_data/*
+assets/models/*
+assets/vectorizers/*
+assets/metadata/*
 
 
