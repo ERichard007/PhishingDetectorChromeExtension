@@ -3,5 +3,6 @@ assets/cleaned_data
 assets/models
 assets/vectorizers
 assets/metadata
+assets/tokenizers
 
 

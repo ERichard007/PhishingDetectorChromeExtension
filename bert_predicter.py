@@ -40,18 +40,14 @@ class bert_predicter:
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
         model_path = os.path.join(base_dir, "assets/models/bert_model.pth")
-
         metadata_path = os.path.join(base_dir, "assets/metadata/bert_metadata.pth")
-
         tokenizer_path = os.path.join(base_dir, "assets/tokenizers/bert_tokenizer")
 
         self.metadata = torch.load(metadata_path)
-
         self.tokenizer = BertTokenizer.from_pretrained(tokenizer_path)
 
         self.model = BertClassifier()
-
-        self.model.load_state_dict(torch.load(model_path))
+        self.model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 
         self.model.eval()
 
@@ -73,6 +69,9 @@ class bert_predicter:
                 encoding['input_ids'],
                 encoding['attention_mask']
             )
+
+        print(output.item())
+        print(torch.sigmoid(output).item())
 
         prob_phishing = torch.sigmoid(output).item()
 

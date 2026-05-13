@@ -1,9 +1,9 @@
 from flask import Flask, request
 from flask_cors import CORS
 
-import backend.Predicters.scikit_predicter as sp
-import backend.Predicters.torch_predicter as tp
-import backend.Predicters.bert_predicter as bp
+import scikit_predicter as sp
+import torch_predicter as tp
+import bert_predicter as bp
 
 
 app = Flask(__name__)
@@ -30,14 +30,17 @@ def scan():
     w3 = bert_prediction['Accuracy'] / (scikit_prediction['Accuracy'] + deep_learning_prediction['Accuracy'] + bert_prediction['Accuracy'])
 
     final_prob = w1 * scikit_prediction['probability_phishing'] + w2 * deep_learning_prediction['probability_phishing'] + w3 * bert_prediction['probability_phishing']
-    prediction = 1 if final_prob >= 0.5 else 0
+
+    phishing_threshold = 0.9
+    prediction = 1 if final_prob >= phishing_threshold else 0
 
     payload = {
         "scikit_weight": w1,
         "deep_learning_weight": w2,
         "bert_weight": w3,
         "weighted_probability_phishing": final_prob,
-        "final_prediction": prediction
+        "final_prediction": prediction,
+        "threat_level": "High" if final_prob >= 0.9 else "Medium" if final_prob >= 0.6 else "Low" if final_prob >= 0.3 else "None"
     }
 
     return {"message": "Scan completed successfully!", "scikit_randomforest_prediction": scikit_prediction, "deep_learning_prediction": deep_learning_prediction, "bert_prediction": bert_prediction, "Overall_Results": payload}

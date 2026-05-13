@@ -14,7 +14,7 @@ class scikit_predicter:
     def __init__(self):
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
-
+        print(base_dir)
         self.model = jl.load(os.path.join(base_dir, "assets", "models", "scikit_model.pkl"))
         self.vectorizer = jl.load(os.path.join(base_dir, "assets", "vectorizers", "scikit_vectorizer.pkl"))
         self.metadata = jl.load(os.path.join(base_dir, "assets", "metadata", "scikit_metadata.pkl"))
