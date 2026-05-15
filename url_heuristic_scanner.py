@@ -5,9 +5,9 @@ from urlextract import URLExtract
 import pandas as pd
 
 import math
-import requests
 import ipaddress
 import re
+import os
 
 #Also scan PhishTank Database for urls to check if they are known or active.
 
@@ -417,7 +417,7 @@ class url_scanner:
             url (str): The URL to be checked against the PhishTank database.
         """
 
-        df = pd.read_csv("assets/cleaned_data/phish_tank.csv", usecols=['url'])
+        df = pd.read_csv("PhishingDetectorChromeExtension/assets/cleaned_data/phish_tank.csv", usecols=['url'])
 
         phish_set = set(df["url"])
 

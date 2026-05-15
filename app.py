@@ -33,8 +33,8 @@ def scan():
     w3 = bert_prediction['Accuracy'] / (scikit_prediction['Accuracy'] + deep_learning_prediction['Accuracy'] + bert_prediction['Accuracy'])
 
     ml_prob = w1 * scikit_prediction['probability_phishing'] + w2 * deep_learning_prediction['probability_phishing'] + w3 * bert_prediction['probability_phishing']
-    url_prob = url_scan_results["overall_threat_score"]
-    final_prob = (0.8 * ml_prob) + (0.2 * url_prob)
+    url_prob = url_scan_results.final_results["overall_threat_score"]
+    final_prob = (0.9 * ml_prob) + (0.1 * url_prob)
 
     phishing_threshold = 0.9
     prediction = 1 if final_prob >= phishing_threshold else 0
@@ -55,7 +55,7 @@ def scan():
         "scikit_randomforest_prediction": scikit_prediction, 
         "deep_learning_prediction": deep_learning_prediction, 
         "bert_prediction": bert_prediction, 
-        "heuristic_url_results": url_scan_results,
+        "heuristic_url_results": url_scan_results.final_results,
         "Overall_Results": payload}
 
 scikit_predicter = sp.scikit_predicter()
